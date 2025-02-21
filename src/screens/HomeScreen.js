@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Picker } from "@react-native-picker/picker";
 import {
   View,
   Text,
@@ -15,6 +16,7 @@ export default function HomeScreen({ navigation }) {
   const [notes, setNotes] = useState([]);
   const [filter, setFilter] = useState("all");
   const [searchText, setSearchText] = useState("");
+  const [selectedPeriod, setSelectedPeriod] = useState("all");
 
   useEffect(() => {
     const unsubscribe = navigation.addListener("focus", () => {
@@ -35,6 +37,33 @@ export default function HomeScreen({ navigation }) {
     }
   };
 
+  const getDateRange = (period) => {
+    const now = new Date();
+    switch (period) {
+      case "day":
+        return {
+          start: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+          end: new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1),
+        };
+      case "week":
+        const startOfWeek = new Date(now.setDate(now.getDate() - now.getDay()));
+        const endOfWeek = new Date(now.setDate(now.getDate() - now.getDay() + 7));
+        return {
+          start: startOfWeek,
+          end: endOfWeek,
+        };
+      case "month":
+        return {
+          start: new Date(now.getFullYear(), now.getMonth(), 1),
+          end: new Date(now.getFullYear(), now.getMonth() + 1, 1),
+        };
+      default:
+        return {
+          start: null,
+          end: null,
+        };
+    }
+  };
   const filteredNotes = notes.filter((note) => {
     const matchesFilter =
       filter === "all" ||
@@ -46,8 +75,15 @@ export default function HomeScreen({ navigation }) {
     const matchesSearch =
       note.title.toLowerCase().includes(searchText.toLowerCase()) ||
       note.description.toLowerCase().includes(searchText.toLowerCase());
+    
+      const matchesPeriod = (() => {
+        if (selectedPeriod === "all") return true;
+        const { start, end } = getDateRange(selectedPeriod);
+        const noteDate = new Date(note.date);
+        return noteDate >= start && noteDate < end;
+      })();
 
-    return matchesFilter && matchesSearch;
+    return matchesFilter && matchesSearch && matchesPeriod;
   });
 
   const FilterButton = ({ title, value }) => (
@@ -110,6 +146,16 @@ export default function HomeScreen({ navigation }) {
         value={searchText}
         onChangeText={setSearchText}
       />
+<Picker
+          selectedValue={selectedPeriod}
+          onValueChange={(itemValue) => setSelectedPeriod(itemValue)}
+          style={styles.picker}
+        >
+          <Picker.Item label="Tout" value="all" />
+          <Picker.Item label="Aujourd'hui" value="day" />
+          <Picker.Item label="Cette semaine" value="week" />
+          <Picker.Item label="Ce mois" value="month" />
+        </Picker>
 
       <ScrollView
         horizontal
@@ -121,6 +167,7 @@ export default function HomeScreen({ navigation }) {
         <FilterButton title="Tâches" value="tasks" />
         <FilterButton title="Terminé" value="completed" />
         <FilterButton title="En cours" value="pending" />
+       
       </ScrollView>
 
       <TouchableOpacity
@@ -129,6 +176,7 @@ export default function HomeScreen({ navigation }) {
       >
         <Text style={styles.addButtonText}>+ Nouvelle Note</Text>
       </TouchableOpacity>
+
 
       <FlatList
         data={filteredNotes}

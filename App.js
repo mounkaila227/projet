@@ -4,6 +4,8 @@ import { createStackNavigator } from "@react-navigation/stack";
 import HomeScreen from "./src/screens/HomeScreen";
 import NoteDetailScreen from "./src/screens/NoteDetailScreen";
 import CreateNoteScreen from "./src/screens/CreateNoteScreen.js";
+import FilterTasksScreen from "./src/screens/FilterTasksScreen";
+import { Picker } from "@react-native-picker/picker";
 const Stack = createStackNavigator();
 
 export default function App() {
@@ -35,6 +37,11 @@ export default function App() {
           name="NoteDetail"
           component={NoteDetailScreen}
           options={{ title: "Détails" }}
+        />
+        <Stack.Screen
+         name="FilterTasks"
+        component={FilterTasksScreen}
+        options={{ title: "select" }}
         />
       </Stack.Navigator>
     </NavigationContainer>
